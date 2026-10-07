@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do List</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 16px;
+      background: #f3f5f7;
+      color: #202124;
+      font-family: Arial, sans-serif;
+    }
+
+    .todo-app {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 28px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px #00000012;
+    }
+
+    h1 {
+      margin: 0 0 20px;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid #c9cdd2;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .add-button {
+      background: #16834a;
+      color: white;
+    }
+
+    .add-button:hover {
+      background: #116b3c;
+    }
+
+    ul {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: #f7f8f9;
+      border-radius: 8px;
+    }
+
+    .task span {
+      flex: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .task.completed span {
+      color: #777;
+      text-decoration: line-through;
+    }
+
+    .delete-button {
+      background: #feecec;
+      color: #b42318;
+    }
+
+    .delete-button:hover {
+      background: #fbd5d5;
+    }
+
+    #empty-message {
+      color: #6b7280;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="todo-app">
+    <h1>My To-Do List</h1>
+
+    <form id="todo-form">
+      <input
+        id="todo-input"
+        type="text"
+        placeholder="What do you need to do?"
+        aria-label="New task"
+        required
+      >
+      <button class="add-button" type="submit">Add</button>
+    </form>
+
+    <p id="empty-message">No tasks yet. Add one above.</p>
+    <ul id="todo-list"></ul>
+  </main>
+
+  <script>
+    const form = document.querySelector("#todo-form");
+    const input = document.querySelector("#todo-input");
+    const list = document.querySelector("#todo-list");
+    const emptyMessage = document.querySelector("#empty-message");
+
+    let tasks = [];
+    try {
+      tasks = JSON.parse(localStorage.getItem("todoTasks")) || [];
+    } catch {
+      tasks = [];
+    }
+
+    function saveTasks() {
+      localStorage.setItem("todoTasks", JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      list.replaceChildren();
+      emptyMessage.hidden = tasks.length > 0;
+
+      tasks.forEach((task) => {
+        const item = document.createElement("li");
+        item.className = task.completed ? "task completed" : "task";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = task.completed;
+        checkbox.setAttribute("aria-label", `Complete ${task.text}`);
+
+        checkbox.addEventListener("change", () => {
+          task.completed = checkbox.checked;
+          saveTasks();
+          renderTasks();
+        });
+
+        const text = document.createElement("span");
+        text.textContent = task.text;
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "delete-button";
+        deleteButton.textContent = "Delete";
+        deleteButton.setAttribute("aria-label", `Delete ${task.text}`);
+
+        deleteButton.addEventListener("click", () => {
+          tasks = tasks.filter((savedTask) => savedTask.id !== task.id);
+          saveTasks();
+          renderTasks();
+        });
+
+        item.append(checkbox, text, deleteButton);
+        list.append(item);
+      });
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const text = input.value.trim();
+      if (!text) return;
+
+      tasks.push({
+        id: Date.now() + Math.random(),
+        text,
+        completed: false
+      });
+
+      saveTasks();
+      renderTasks();
+      form.reset();
+      input.focus();
+    });
+
+    renderTasks();
+  </script>
+</body>
+</html>
