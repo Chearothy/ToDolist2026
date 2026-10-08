@@ -16,9 +16,12 @@
   .time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .time-row input{width:100%}
   button{cursor:pointer}
-  .primary{width:100%;padding:12px;border:0;border-radius:9px;background:#16834a;color:white;font-weight:bold}
-  .primary:hover{background:#116b3c}
-  .primary:disabled{opacity:.6;cursor:wait}
+  .export-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+  .copy-button,.csv-button,.primary{width:100%;padding:12px;border:0;border-radius:9px;color:white;font-weight:bold}
+  .copy-button,.primary{background:#16834a}
+  .csv-button{background:#2563a6}
+  .copy-button:hover,.primary:hover{background:#116b3c}
+  .csv-button:hover{background:#1d4f86}
   ul{display:grid;gap:8px;margin:0;padding:0;list-style:none}
   #list>li{display:flex;align-items:center;gap:10px;padding:12px;background:#f7f8f9;border-radius:10px}
   .check{appearance:none;-webkit-appearance:none;display:grid;place-items:center;width:28px;height:28px;flex:none;margin:0;padding:0;border:2px solid #aeb4b9;border-radius:50%;background:white;cursor:pointer}
@@ -32,12 +35,12 @@
   .week-heading h2{margin:0;font-size:20px}
   .clear-button{width:auto;padding:9px 12px;background:#feecec;color:#b42318;border:0}
   .clear-button:disabled{opacity:.5;cursor:not-allowed}
-  #week-counts,#sheet-status{color:#606770}
+  #week-counts{color:#606770}
   #week-list>li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #e1e4e8}
   .week-record{flex:1;overflow-wrap:anywhere}
-  #empty,#week-empty{text-align:center;color:#6b7280}
+  #empty,#week-empty{color:#6b7280;text-align:center}
   @media(max-width:520px){
-    .time-row{grid-template-columns:1fr}
+    .time-row,.export-buttons{grid-template-columns:1fr}
     #list>li{align-items:flex-start}
     .week-heading{align-items:flex-start;flex-direction:column}
   }
@@ -47,10 +50,10 @@
 <main>
   <h1>My To-Do List</h1>
 
-  <button id="sync-sheets" class="primary" type="button">
-    Sign in & sync to Google Sheets
-  </button>
-  <p id="sheet-status">Sign in to create/update your task spreadsheet.</p>
+  <div class="export-buttons">
+    <button id="copyRecords" class="copy-button" type="button">Copy records</button>
+    <button id="downloadCsv" class="csv-button" type="button">Download CSV</button>
+  </div>
 
   <form id="form">
     <input id="task" placeholder="What do you need to do?" required>
@@ -75,7 +78,7 @@
   <section class="weekly-summary">
     <div class="week-heading">
       <h2>This Week</h2>
-      <button id="clear-done" class="clear-button" type="button">Clear all done</button>
+      <button id="clearDone" class="clear-button" type="button">Clear all done</button>
     </div>
     <p id="week-counts"></p>
     <p id="week-empty">No tasks scheduled this week.</p>
@@ -83,13 +86,7 @@
   </section>
 </main>
 
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="https://accounts.google.com/gsi/client"></script>
 <script>
-  // Replace this with your Google OAuth Web client ID.
-  const GOOGLE_CLIENT_ID = "PASTE_YOUR_WEB_CLIENT_ID_HERE";
-  const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
-
   const $ = selector => document.querySelector(selector);
   const form = $("#form");
   let tasks = [];
@@ -99,21 +96,6 @@
   } catch {
     tasks = [];
   }
-
-  const googleApiReady = new Promise((resolve, reject) => {
-    gapi.load("client", async () => {
-      try {
-        await gapi.client.init({
-          discoveryDocs: [
-            "https://sheets.googleapis.com/$discovery/rest?version=v4"
-          ]
-        });
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
-  });
 
   function save() {
     localStorage.setItem("todoTasks", JSON.stringify(tasks));
@@ -151,13 +133,9 @@
       dates: `${calendarDate(task.startAt)}/${calendarDate(task.deadlineAt)}`
     });
 
-    const tab = window.open(
-      `https://calendar.google.com/calendar/render?${params}`,
-      "_blank"
-    );
-
-    if (!tab) window.location.href =
-      `https://calendar.google.com/calendar/render?${params}`;
+    const url = `https://calendar.google.com/calendar/render?${params}`;
+    const tab = window.open(url, "_blank");
+    if (!tab) window.location.href = url;
   }
 
   function deleteTask(id) {
@@ -208,7 +186,7 @@
       $("#week-list").append(item);
     });
 
-    $("#clear-done").disabled = !tasks.some(task => task.completed);
+    $("#clearDone").disabled = !tasks.some(task => task.completed);
   }
 
   function render() {
@@ -250,88 +228,6 @@
     renderWeeklySummary();
   }
 
-  function getGoogleAccessToken() {
-    return new Promise((resolve, reject) => {
-      const client = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: SHEETS_SCOPE,
-        callback: response => {
-          if (response.error) {
-            reject(new Error(response.error_description || response.error));
-            return;
-          }
-
-          gapi.client.setToken({access_token: response.access_token});
-          localStorage.setItem("todoSheetsAuthorized", "true");
-          resolve();
-        },
-        error_callback: error => reject(
-          new Error(error.message || "Google sign-in was closed or blocked.")
-        )
-      });
-
-      const prompt = localStorage.getItem("todoSheetsAuthorized") ? "" : "consent";
-      client.requestAccessToken({prompt});
-    });
-  }
-
-  async function syncToGoogleSheets() {
-    const button = $("#sync-sheets");
-    const status = $("#sheet-status");
-    button.disabled = true;
-    status.textContent = "Connecting to Google Sheets…";
-
-    try {
-      if (GOOGLE_CLIENT_ID === "PASTE_YOUR_WEB_CLIENT_ID_HERE") {
-        throw new Error("Add your Google OAuth Client ID in the code first.");
-      }
-
-      await googleApiReady;
-      await getGoogleAccessToken();
-
-      let spreadsheetId = localStorage.getItem("todoSpreadsheetId");
-
-      if (!spreadsheetId) {
-        const created = await gapi.client.sheets.spreadsheets.create({
-          properties: {title: "To-Do List Records"},
-          sheets: [{properties: {title: "Tasks"}}]
-        });
-
-        spreadsheetId = created.result.spreadsheetId;
-        localStorage.setItem("todoSpreadsheetId", spreadsheetId);
-      }
-
-      const rows = [
-        ["Task", "Status", "Start", "Deadline", "Completed at"],
-        ...tasks.map(task => [
-          task.text,
-          task.completed ? "Done" : "Not yet",
-          shortDate(task.startAt),
-          shortDate(task.deadlineAt),
-          task.completedAt ? shortDate(task.completedAt) : ""
-        ])
-      ];
-
-      await gapi.client.sheets.spreadsheets.values.clear({
-        spreadsheetId,
-        range: "Tasks!A:Z"
-      });
-
-      await gapi.client.sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: "Tasks!A1",
-        valueInputOption: "USER_ENTERED",
-        resource: {values: rows}
-      });
-
-      window.location.href =
-        `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
-    } catch (error) {
-      status.textContent = `Could not sync: ${error.message}`;
-      button.disabled = false;
-    }
-  }
-
   form.onsubmit = event => {
     event.preventDefault();
 
@@ -366,7 +262,7 @@
 
   $("#deadline").oninput = () => $("#deadline").setCustomValidity("");
 
-  $("#clear-done").onclick = () => {
+  $("#clearDone").onclick = () => {
     const count = tasks.filter(task => task.completed).length;
     if (!count || !confirm(`Delete all ${count} completed task(s) from this app?`)) return;
 
@@ -375,7 +271,48 @@
     render();
   };
 
-  $("#sync-sheets").onclick = syncToGoogleSheets;
+  function exportRows() {
+    return [
+      ["Task", "Status", "Start", "Deadline", "Completed at"],
+      ...tasks.map(task => [
+        task.text,
+        task.completed ? "Done" : "Not yet",
+        shortDate(task.startAt),
+        shortDate(task.deadlineAt),
+        task.completedAt ? shortDate(task.completedAt) : ""
+      ])
+    ];
+  }
+
+  $("#copyRecords").onclick = async () => {
+    const data = exportRows()
+      .map(row => row.map(value => String(value).replace(/\t|\r?\n/g, " ")).join("\t"))
+      .join("\n");
+
+    try {
+      await navigator.clipboard.writeText(data);
+      alert("Records copied. Paste them into Google Sheets.");
+    } catch {
+      alert("Copy failed. Use the Download CSV button instead.");
+    }
+  };
+
+  $("#downloadCsv").onclick = () => {
+    const csv = exportRows()
+      .map(row => row.map(value =>
+        `"${String(value).replace(/"/g, '""')}"`
+      ).join(","))
+      .join("\r\n");
+
+    const blob = new Blob(["\uFEFF", csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "todo-list-records.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   setDefaultTimes();
   render();
