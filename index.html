@@ -1,203 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>To-Do List</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 40px 16px;
-      background: #f3f5f7;
-      color: #202124;
-      font-family: Arial, sans-serif;
-    }
-
-    .todo-app {
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 28px;
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 8px 24px #00000012;
-    }
-
-    h1 {
-      margin: 0 0 20px;
-    }
-
-    form {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    input[type="text"] {
-      flex: 1;
-      min-width: 0;
-      padding: 12px;
-      border: 1px solid #c9cdd2;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 10px 14px;
-      border: 0;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 15px;
-    }
-
-    .add-button {
-      background: #16834a;
-      color: white;
-    }
-
-    .add-button:hover {
-      background: #116b3c;
-    }
-
-    ul {
-      display: grid;
-      gap: 10px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .task {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px;
-      background: #f7f8f9;
-      border-radius: 8px;
-    }
-
-    .task span {
-      flex: 1;
-      overflow-wrap: anywhere;
-    }
-
-    .task.completed span {
-      color: #777;
-      text-decoration: line-through;
-    }
-
-    .delete-button {
-      background: #feecec;
-      color: #b42318;
-    }
-
-    .delete-button:hover {
-      background: #fbd5d5;
-    }
-
-    #empty-message {
-      color: #6b7280;
-      text-align: center;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>To-Do List</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:clamp(16px,4vw,40px);background:#f3f5f7;color:#202124;font-family:Arial,sans-serif}
+  main{max-width:700px;margin:auto;padding:clamp(18px,4vw,28px);background:white;border-radius:16px;box-shadow:0 8px 24px #00000012}
+  h1{margin-top:0}
+  form{display:grid;gap:12px;margin:20px 0}
+  input,button{padding:12px;border:1px solid #c9cdd2;border-radius:9px;font:inherit}
+  #task{width:100%}
+  label{display:block;margin-bottom:6px;font-size:14px}
+  .time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .time-row input{width:100%}
+  button{cursor:pointer}
+  .primary{width:100%;padding:12px;border:0;border-radius:9px;background:#16834a;color:white;font-weight:bold}
+  .primary:hover{background:#116b3c}
+  .primary:disabled{opacity:.6;cursor:wait}
+  ul{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+  #list>li{display:flex;align-items:center;gap:10px;padding:12px;background:#f7f8f9;border-radius:10px}
+  .check{appearance:none;-webkit-appearance:none;display:grid;place-items:center;width:28px;height:28px;flex:none;margin:0;padding:0;border:2px solid #aeb4b9;border-radius:50%;background:white;cursor:pointer}
+  .check:checked{background:#08a330;border-color:#08a330}
+  .check:checked::after{content:"✓";color:white;font:bold 17px/1 Arial,sans-serif}
+  .task-name{flex:1;overflow-wrap:anywhere}
+  .done .task-name{color:#777;text-decoration:line-through}
+  .delete-button{width:auto;padding:9px 12px;background:#feecec;color:#b42318;border:0}
+  .weekly-summary{margin-top:26px;padding:16px;background:#f7f8f9;border-radius:10px}
+  .week-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .week-heading h2{margin:0;font-size:20px}
+  .clear-button{width:auto;padding:9px 12px;background:#feecec;color:#b42318;border:0}
+  .clear-button:disabled{opacity:.5;cursor:not-allowed}
+  #week-counts,#sheet-status{color:#606770}
+  #week-list>li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #e1e4e8}
+  .week-record{flex:1;overflow-wrap:anywhere}
+  #empty,#week-empty{text-align:center;color:#6b7280}
+  @media(max-width:520px){
+    .time-row{grid-template-columns:1fr}
+    #list>li{align-items:flex-start}
+    .week-heading{align-items:flex-start;flex-direction:column}
+  }
+</style>
 </head>
 <body>
-  <main class="todo-app">
-    <h1>My To-Do List</h1>
+<main>
+  <h1>My To-Do List</h1>
 
-    <form id="todo-form">
-      <input
-        id="todo-input"
-        type="text"
-        placeholder="What do you need to do?"
-        aria-label="New task"
-        required
-      >
-      <button class="add-button" type="submit">Add</button>
-    </form>
+  <button id="sync-sheets" class="primary" type="button">
+    Sign in & sync to Google Sheets
+  </button>
+  <p id="sheet-status">Sign in to create/update your task spreadsheet.</p>
 
-    <p id="empty-message">No tasks yet. Add one above.</p>
-    <ul id="todo-list"></ul>
-  </main>
+  <form id="form">
+    <input id="task" placeholder="What do you need to do?" required>
 
-  <script>
-    const form = document.querySelector("#todo-form");
-    const input = document.querySelector("#todo-input");
-    const list = document.querySelector("#todo-list");
-    const emptyMessage = document.querySelector("#empty-message");
+    <div class="time-row">
+      <div>
+        <label for="start">Start date/time</label>
+        <input id="start" type="datetime-local" required>
+      </div>
+      <div>
+        <label for="deadline">Deadline</label>
+        <input id="deadline" type="datetime-local" required>
+      </div>
+    </div>
 
-    let tasks = [];
-    try {
-      tasks = JSON.parse(localStorage.getItem("todoTasks")) || [];
-    } catch {
-      tasks = [];
-    }
+    <button class="primary" type="submit">Add & Open Calendar</button>
+  </form>
 
-    function saveTasks() {
-      localStorage.setItem("todoTasks", JSON.stringify(tasks));
-    }
+  <p id="empty">No tasks yet. Add one above.</p>
+  <ul id="list"></ul>
 
-    function renderTasks() {
-      list.replaceChildren();
-      emptyMessage.hidden = tasks.length > 0;
+  <section class="weekly-summary">
+    <div class="week-heading">
+      <h2>This Week</h2>
+      <button id="clear-done" class="clear-button" type="button">Clear all done</button>
+    </div>
+    <p id="week-counts"></p>
+    <p id="week-empty">No tasks scheduled this week.</p>
+    <ul id="week-list"></ul>
+  </section>
+</main>
 
-      tasks.forEach((task) => {
-        const item = document.createElement("li");
-        item.className = task.completed ? "task completed" : "task";
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<script>
+  // Replace this with your Google OAuth Web client ID.
+  const GOOGLE_CLIENT_ID = "PASTE_YOUR_WEB_CLIENT_ID_HERE";
+  const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = task.completed;
-        checkbox.setAttribute("aria-label", `Complete ${task.text}`);
+  const $ = selector => document.querySelector(selector);
+  const form = $("#form");
+  let tasks = [];
 
-        checkbox.addEventListener("change", () => {
-          task.completed = checkbox.checked;
-          saveTasks();
-          renderTasks();
+  try {
+    tasks = JSON.parse(localStorage.getItem("todoTasks")) || [];
+  } catch {
+    tasks = [];
+  }
+
+  const googleApiReady = new Promise((resolve, reject) => {
+    gapi.load("client", async () => {
+      try {
+        await gapi.client.init({
+          discoveryDocs: [
+            "https://sheets.googleapis.com/$discovery/rest?version=v4"
+          ]
         });
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
 
-        const text = document.createElement("span");
-        text.textContent = task.text;
+  function save() {
+    localStorage.setItem("todoTasks", JSON.stringify(tasks));
+  }
 
-        const deleteButton = document.createElement("button");
-        deleteButton.type = "button";
-        deleteButton.className = "delete-button";
-        deleteButton.textContent = "Delete";
-        deleteButton.setAttribute("aria-label", `Delete ${task.text}`);
+  function localDateTime(date) {
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString().slice(0, 16);
+  }
 
-        deleteButton.addEventListener("click", () => {
-          tasks = tasks.filter((savedTask) => savedTask.id !== task.id);
-          saveTasks();
-          renderTasks();
-        });
+  function setDefaultTimes() {
+    const now = new Date();
+    $("#start").value = localDateTime(
+      new Date(now.getTime() + 30 * 60 * 1000)
+    );
+    $("#deadline").value = localDateTime(
+      new Date(now.getTime() + 24 * 60 * 60 * 1000)
+    );
+  }
 
-        item.append(checkbox, text, deleteButton);
-        list.append(item);
-      });
-    }
+  function shortDate(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? ""
+      : date.toLocaleString([], {dateStyle:"short", timeStyle:"short"});
+  }
 
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
+  function openGoogleCalendar(task) {
+    const calendarDate = value =>
+      new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 
-      const text = input.value.trim();
-      if (!text) return;
-
-      tasks.push({
-        id: Date.now() + Math.random(),
-        text,
-        completed: false
-      });
-
-      saveTasks();
-      renderTasks();
-      form.reset();
-      input.focus();
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: task.text,
+      dates: `${calendarDate(task.startAt)}/${calendarDate(task.deadlineAt)}`
     });
 
-    renderTasks();
-  </script>
+    const tab = window.open(
+      `https://calendar.google.com/calendar/render?${params}`,
+      "_blank"
+    );
+
+    if (!tab) window.location.href =
+      `https://calendar.google.com/calendar/render?${params}`;
+  }
+
+  function deleteTask(id) {
+    tasks = tasks.filter(task => task.id !== id);
+    save();
+    render();
+  }
+
+  function renderWeeklySummary() {
+    const monday = new Date();
+    monday.setDate(monday.getDate() - (monday.getDay() + 6) % 7);
+    monday.setHours(0, 0, 0, 0);
+
+    const nextMonday = new Date(monday);
+    nextMonday.setDate(nextMonday.getDate() + 7);
+
+    const weeklyTasks = tasks.filter(task => {
+      const start = new Date(task.startAt);
+      return !Number.isNaN(start.getTime()) &&
+        start >= monday && start < nextMonday;
+    });
+
+    const doneCount = weeklyTasks.filter(task => task.completed).length;
+    $("#week-counts").textContent =
+      `${doneCount} done · ${weeklyTasks.length - doneCount} not yet · ${weeklyTasks.length} total`;
+
+    $("#week-empty").hidden = weeklyTasks.length > 0;
+    $("#week-list").replaceChildren();
+
+    weeklyTasks.forEach(task => {
+      const item = document.createElement("li");
+      const record = document.createElement("span");
+      record.className = "week-record";
+
+      const status = task.completed ? "✓ Done" : "○ Not yet";
+      const completedAt = task.completedAt
+        ? ` — completed ${shortDate(task.completedAt)}`
+        : "";
+      record.textContent = `${status} — ${task.text}${completedAt}`;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "delete-button";
+      remove.textContent = "Delete";
+      remove.onclick = () => deleteTask(task.id);
+
+      item.append(record, remove);
+      $("#week-list").append(item);
+    });
+
+    $("#clear-done").disabled = !tasks.some(task => task.completed);
+  }
+
+  function render() {
+    $("#list").replaceChildren();
+    $("#empty").hidden = tasks.length > 0;
+
+    [...tasks]
+      .sort((a, b) => Number(!!a.completed) - Number(!!b.completed))
+      .forEach(task => {
+        const item = document.createElement("li");
+        item.className = task.completed ? "done" : "";
+
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.className = "check";
+        check.checked = !!task.completed;
+        check.setAttribute("aria-label", `Mark ${task.text} complete`);
+        check.onchange = () => {
+          task.completed = check.checked;
+          task.completedAt = check.checked ? new Date().toISOString() : null;
+          save();
+          render();
+        };
+
+        const name = document.createElement("span");
+        name.className = "task-name";
+        name.textContent = task.text;
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "delete-button";
+        remove.textContent = "Delete";
+        remove.onclick = () => deleteTask(task.id);
+
+        item.append(check, name, remove);
+        $("#list").append(item);
+      });
+
+    renderWeeklySummary();
+  }
+
+  function getGoogleAccessToken() {
+    return new Promise((resolve, reject) => {
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: SHEETS_SCOPE,
+        callback: response => {
+          if (response.error) {
+            reject(new Error(response.error_description || response.error));
+            return;
+          }
+
+          gapi.client.setToken({access_token: response.access_token});
+          localStorage.setItem("todoSheetsAuthorized", "true");
+          resolve();
+        },
+        error_callback: error => reject(
+          new Error(error.message || "Google sign-in was closed or blocked.")
+        )
+      });
+
+      const prompt = localStorage.getItem("todoSheetsAuthorized") ? "" : "consent";
+      client.requestAccessToken({prompt});
+    });
+  }
+
+  async function syncToGoogleSheets() {
+    const button = $("#sync-sheets");
+    const status = $("#sheet-status");
+    button.disabled = true;
+    status.textContent = "Connecting to Google Sheets…";
+
+    try {
+      if (GOOGLE_CLIENT_ID === "PASTE_YOUR_WEB_CLIENT_ID_HERE") {
+        throw new Error("Add your Google OAuth Client ID in the code first.");
+      }
+
+      await googleApiReady;
+      await getGoogleAccessToken();
+
+      let spreadsheetId = localStorage.getItem("todoSpreadsheetId");
+
+      if (!spreadsheetId) {
+        const created = await gapi.client.sheets.spreadsheets.create({
+          properties: {title: "To-Do List Records"},
+          sheets: [{properties: {title: "Tasks"}}]
+        });
+
+        spreadsheetId = created.result.spreadsheetId;
+        localStorage.setItem("todoSpreadsheetId", spreadsheetId);
+      }
+
+      const rows = [
+        ["Task", "Status", "Start", "Deadline", "Completed at"],
+        ...tasks.map(task => [
+          task.text,
+          task.completed ? "Done" : "Not yet",
+          shortDate(task.startAt),
+          shortDate(task.deadlineAt),
+          task.completedAt ? shortDate(task.completedAt) : ""
+        ])
+      ];
+
+      await gapi.client.sheets.spreadsheets.values.clear({
+        spreadsheetId,
+        range: "Tasks!A:Z"
+      });
+
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: "Tasks!A1",
+        valueInputOption: "USER_ENTERED",
+        resource: {values: rows}
+      });
+
+      window.location.href =
+        `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+    } catch (error) {
+      status.textContent = `Could not sync: ${error.message}`;
+      button.disabled = false;
+    }
+  }
+
+  form.onsubmit = event => {
+    event.preventDefault();
+
+    const text = $("#task").value.trim();
+    const startAt = new Date($("#start").value);
+    const deadlineAt = new Date($("#deadline").value);
+
+    if (deadlineAt < startAt) {
+      $("#deadline").setCustomValidity("Deadline must be after the start time.");
+      $("#deadline").reportValidity();
+      return;
+    }
+
+    $("#deadline").setCustomValidity("");
+
+    const task = {
+      id: Date.now() + Math.random(),
+      text,
+      startAt: startAt.toISOString(),
+      deadlineAt: deadlineAt.toISOString(),
+      completed: false,
+      completedAt: null
+    };
+
+    tasks.push(task);
+    save();
+    render();
+    openGoogleCalendar(task);
+    form.reset();
+    setDefaultTimes();
+  };
+
+  $("#deadline").oninput = () => $("#deadline").setCustomValidity("");
+
+  $("#clear-done").onclick = () => {
+    const count = tasks.filter(task => task.completed).length;
+    if (!count || !confirm(`Delete all ${count} completed task(s) from this app?`)) return;
+
+    tasks = tasks.filter(task => !task.completed);
+    save();
+    render();
+  };
+
+  $("#sync-sheets").onclick = syncToGoogleSheets;
+
+  setDefaultTimes();
+  render();
+</script>
 </body>
 </html>
