@@ -5,44 +5,304 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>To-Do List</title>
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;padding:clamp(16px,4vw,40px);background:#f3f5f7;color:#202124;font-family:Arial,sans-serif}
-  main{max-width:700px;margin:auto;padding:clamp(18px,4vw,28px);background:white;border-radius:16px;box-shadow:0 8px 24px #00000012}
-  h1{margin-top:0}
-  form{display:grid;gap:12px;margin:20px 0}
-  input,button{padding:12px;border:1px solid #c9cdd2;border-radius:9px;font:inherit}
-  #task{width:100%}
-  label{display:block;margin-bottom:6px;font-size:14px}
-  .time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .time-row input{width:100%}
-  button{cursor:pointer}
-  .export-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
-  .copy-button,.csv-button,.primary{width:100%;padding:12px;border:0;border-radius:9px;color:white;font-weight:bold}
-  .copy-button,.primary{background:#16834a}
-  .csv-button{background:#2563a6}
-  .copy-button:hover,.primary:hover{background:#116b3c}
-  .csv-button:hover{background:#1d4f86}
-  ul{display:grid;gap:8px;margin:0;padding:0;list-style:none}
-  #list>li{display:flex;align-items:center;gap:10px;padding:12px;background:#f7f8f9;border-radius:10px}
-  .check{appearance:none;-webkit-appearance:none;display:grid;place-items:center;width:28px;height:28px;flex:none;margin:0;padding:0;border:2px solid #aeb4b9;border-radius:50%;background:white;cursor:pointer}
-  .check:checked{background:#08a330;border-color:#08a330}
-  .check:checked::after{content:"✓";color:white;font:bold 17px/1 Arial,sans-serif}
-  .task-name{flex:1;overflow-wrap:anywhere}
-  .done .task-name{color:#777;text-decoration:line-through}
-  .delete-button{width:auto;padding:9px 12px;background:#feecec;color:#b42318;border:0}
-  .weekly-summary{margin-top:26px;padding:16px;background:#f7f8f9;border-radius:10px}
-  .week-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .week-heading h2{margin:0;font-size:20px}
-  .clear-button{width:auto;padding:9px 12px;background:#feecec;color:#b42318;border:0}
-  .clear-button:disabled{opacity:.5;cursor:not-allowed}
-  #week-counts{color:#606770}
-  #week-list>li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #e1e4e8}
-  .week-record{flex:1;overflow-wrap:anywhere}
-  #empty,#week-empty{color:#6b7280;text-align:center}
-  @media(max-width:520px){
-    .time-row,.export-buttons{grid-template-columns:1fr}
-    #list>li{align-items:flex-start}
-    .week-heading{align-items:flex-start;flex-direction:column}
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: clamp(16px, 4vw, 40px);
+    background: #f3f5f7;
+    color: #202124;
+    font-family: Arial, sans-serif;
+  }
+
+  main {
+    max-width: 700px;
+    margin: auto;
+    padding: clamp(18px, 4vw, 28px);
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px #00000012;
+  }
+
+  h1 { margin-top: 0; }
+
+  form {
+    display: grid;
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  input, button {
+    padding: 12px;
+    border: 1px solid #c9cdd2;
+    border-radius: 9px;
+    font: inherit;
+  }
+
+  #task { width: 100%; }
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  .time-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .time-row input { width: 100%; }
+
+  button { cursor: pointer; }
+
+  .export-buttons, .form-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .export-buttons { margin: 12px 0; }
+
+  .export-buttons button, .form-actions button {
+    width: 100%;
+    min-width: 0;
+    padding: 11px 6px;
+    color: white;
+    border: 0;
+    font-weight: bold;
+  }
+
+  .copy-button, .primary { background: #16834a; }
+  .csv-button { background: #2563a6; }
+
+  .calendar-form-button {
+    background: #e8f3ff !important;
+    color: #135ca7 !important;
+  }
+
+  ul {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  #list > li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f7f8f9;
+    border-radius: 10px;
+  }
+
+  .check {
+    appearance: none;
+    -webkit-appearance: none;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    margin: 0;
+    padding: 0;
+    border: 2px solid #aeb4b9;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+  }
+
+  .check:checked {
+    background: #08a330;
+    border-color: #08a330;
+  }
+
+  .check:checked::after {
+    content: "✓";
+    color: white;
+    font: bold 17px/1 Arial, sans-serif;
+  }
+
+  .task-name {
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .done.task-name {
+    color: #777;
+    text-decoration: line-through;
+  }
+
+  .task-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .calendar-button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: #e8f3ff;
+    color: #135ca7;
+    border: 0;
+    font-size: 24px;
+  }
+
+  .delete-button {
+    width: auto;
+    padding: 9px 12px;
+    background: #feecec;
+    color: #b42318;
+    border: 0;
+  }
+
+  .weekly-summary {
+    margin-top: 26px;
+    padding: 16px;
+    background: #f7f8f9;
+    border-radius: 10px;
+  }
+
+  .week-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .week-heading h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+
+  .clear-button, .see-more {
+    width: auto;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 8px;
+  }
+
+  .clear-button {
+    background: #feecec;
+    color: #b42318;
+  }
+
+  .clear-button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+
+  .see-more {
+    margin-top: 10px;
+    background: #e8f3ff;
+    color: #135ca7;
+  }
+
+  #week-counts { color: #606770; }
+
+  #week-list > li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid #e1e4e8;
+  }
+
+  .week-record {
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+
+  #empty, #week-empty {
+    color: #6b7280;
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    body { padding: 12px; }
+
+    main {
+      padding: 16px;
+      border-radius: 12px;
+    }
+
+    h1 { font-size: 25px; }
+
+    .time-row { grid-template-columns: 1fr; }
+
+    .export-buttons, .form-actions {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .export-buttons button, .form-actions button {
+      min-height: 44px;
+      padding: 9px 5px;
+      font-size: 13px;
+    }
+
+    #list > li {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .task-name {
+      grid-column: 2;
+      min-width: 0;
+    }
+
+    .task-actions {
+      grid-column: 3;
+      width: auto;
+      padding: 0;
+      flex-wrap: nowrap;
+    }
+
+    .calendar-button {
+      width: 36px;
+      height: 40px;
+      font-size: 20px;
+    }
+
+    .delete-button {
+      min-height: 40px;
+      padding: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .week-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    #week-list > li { align-items: flex-start; }
+
+    input[type="datetime-local"] {
+      min-width: 0;
+      font-size: 14px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    #list > li {
+      gap: 6px;
+      padding: 8px;
+    }
+
+    .calendar-button { width: 32px; }
+
+    .delete-button {
+      padding: 7px 6px;
+      font-size: 12px;
+    }
   }
 </style>
 </head>
@@ -69,11 +329,15 @@
       </div>
     </div>
 
-    <button class="primary" type="submit">Add & Open Calendar</button>
+    <div class="form-actions">
+      <button class="primary" type="submit">Add Task</button>
+      <button id="addCalendar" class="calendar-form-button" type="button">Add Calendar</button>
+    </div>
   </form>
 
   <p id="empty">No tasks yet. Add one above.</p>
   <ul id="list"></ul>
+  <button id="taskMore" class="see-more" type="button" hidden>See more</button>
 
   <section class="weekly-summary">
     <div class="week-heading">
@@ -83,19 +347,19 @@
     <p id="week-counts"></p>
     <p id="week-empty">No tasks scheduled this week.</p>
     <ul id="week-list"></ul>
+    <button id="weekMore" class="see-more" type="button" hidden>See more</button>
   </section>
 </main>
 
 <script>
   const $ = selector => document.querySelector(selector);
   const form = $("#form");
+  const expanded = { tasks: false, week: false };
   let tasks = [];
 
   try {
     tasks = JSON.parse(localStorage.getItem("todoTasks")) || [];
-  } catch {
-    tasks = [];
-  }
+  } catch {}
 
   function save() {
     localStorage.setItem("todoTasks", JSON.stringify(tasks));
@@ -103,24 +367,40 @@
 
   function localDateTime(date) {
     return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-      .toISOString().slice(0, 16);
+      .toISOString()
+      .slice(0, 16);
   }
 
   function setDefaultTimes() {
     const now = new Date();
-    $("#start").value = localDateTime(
-      new Date(now.getTime() + 30 * 60 * 1000)
-    );
-    $("#deadline").value = localDateTime(
-      new Date(now.getTime() + 24 * 60 * 60 * 1000)
-    );
+    const start = new Date(now);
+
+    // Round up to the next whole minute, then to the next 30-minute mark.
+    start.setSeconds(0, 0);
+
+    if (now.getSeconds() > 0 || now.getMilliseconds() > 0) {
+      start.setMinutes(start.getMinutes() + 1);
+    }
+
+    start.setMinutes(Math.ceil(start.getMinutes() / 30) * 30);
+
+    // Set the deadline to one hour after the start time.
+    const deadline = new Date(start.getTime() + 60 * 60 * 1000);
+
+    $("#start").value = localDateTime(start);
+    $("#deadline").value = localDateTime(deadline);
   }
 
   function shortDate(value) {
     const date = new Date(value);
     return Number.isNaN(date.getTime())
       ? ""
-      : date.toLocaleString([], {dateStyle:"short", timeStyle:"short"});
+      : date.toLocaleString([], { dateStyle: "short", timeStyle: "short" });
+  }
+
+  function newestFirst(a, b) {
+    return new Date(b.createdAt || b.startAt) -
+      new Date(a.createdAt || a.startAt);
   }
 
   function openGoogleCalendar(task) {
@@ -135,6 +415,7 @@
 
     const url = `https://calendar.google.com/calendar/render?${params}`;
     const tab = window.open(url, "_blank");
+
     if (!tab) window.location.href = url;
   }
 
@@ -142,6 +423,49 @@
     tasks = tasks.filter(task => task.id !== id);
     save();
     render();
+  }
+
+  function makeTaskRow(task) {
+    const item = document.createElement("li");
+    item.className = task.completed ? "done" : "";
+
+    const check = document.createElement("input");
+    check.type = "checkbox";
+    check.className = "check";
+    check.checked = !!task.completed;
+    check.setAttribute("aria-label", `Mark ${task.text} complete`);
+    check.onchange = () => {
+      task.completed = check.checked;
+      task.completedAt = check.checked ? new Date().toISOString() : null;
+      save();
+      render();
+    };
+
+    const name = document.createElement("span");
+    name.className = "task-name";
+    name.textContent = task.text;
+
+    const actions = document.createElement("div");
+    actions.className = "task-actions";
+
+    const calendar = document.createElement("button");
+    calendar.type = "button";
+    calendar.className = "calendar-button";
+    calendar.textContent = "+";
+    calendar.title = "Add to Calendar";
+    calendar.setAttribute("aria-label", `Add ${task.text} to Calendar`);
+    calendar.onclick = () => openGoogleCalendar(task);
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "delete-button";
+    remove.textContent = "Delete";
+    remove.onclick = () => deleteTask(task.id);
+
+    actions.append(calendar, remove);
+    item.append(check, name, actions);
+
+    return item;
   }
 
   function renderWeeklySummary() {
@@ -152,20 +476,24 @@
     const nextMonday = new Date(monday);
     nextMonday.setDate(nextMonday.getDate() + 7);
 
-    const weeklyTasks = tasks.filter(task => {
-      const start = new Date(task.startAt);
-      return !Number.isNaN(start.getTime()) &&
-        start >= monday && start < nextMonday;
-    });
+    const weeklyTasks = tasks
+      .filter(task => {
+        const start = new Date(task.startAt);
+        return !Number.isNaN(start.getTime()) && start >= monday && start < nextMonday;
+      })
+      .sort(newestFirst);
 
     const doneCount = weeklyTasks.filter(task => task.completed).length;
+
     $("#week-counts").textContent =
       `${doneCount} done · ${weeklyTasks.length - doneCount} not yet · ${weeklyTasks.length} total`;
 
     $("#week-empty").hidden = weeklyTasks.length > 0;
     $("#week-list").replaceChildren();
 
-    weeklyTasks.forEach(task => {
+    const visible = expanded.week ? weeklyTasks : weeklyTasks.slice(0, 2);
+
+    visible.forEach(task => {
       const item = document.createElement("li");
       const record = document.createElement("span");
       record.className = "week-record";
@@ -174,6 +502,7 @@
       const completedAt = task.completedAt
         ? ` — completed ${shortDate(task.completedAt)}`
         : "";
+
       record.textContent = `${status} — ${task.text}${completedAt}`;
 
       const remove = document.createElement("button");
@@ -186,52 +515,42 @@
       $("#week-list").append(item);
     });
 
+    $("#weekMore").hidden = weeklyTasks.length <= 2;
+    $("#weekMore").textContent = expanded.week ? "See less" : "See more";
     $("#clearDone").disabled = !tasks.some(task => task.completed);
   }
 
   function render() {
     $("#list").replaceChildren();
-    $("#empty").hidden = tasks.length > 0;
 
-    [...tasks]
-      .sort((a, b) => Number(!!a.completed) - Number(!!b.completed))
-      .forEach(task => {
-        const item = document.createElement("li");
-        item.className = task.completed ? "done" : "";
+    const pending = tasks
+      .filter(task => !task.completed)
+      .sort(newestFirst);
 
-        const check = document.createElement("input");
-        check.type = "checkbox";
-        check.className = "check";
-        check.checked = !!task.completed;
-        check.setAttribute("aria-label", `Mark ${task.text} complete`);
-        check.onchange = () => {
-          task.completed = check.checked;
-          task.completedAt = check.checked ? new Date().toISOString() : null;
-          save();
-          render();
-        };
+    const done = tasks
+      .filter(task => task.completed)
+      .sort((a, b) =>
+        new Date(b.completedAt || b.startAt) -
+        new Date(a.completedAt || a.startAt)
+      );
 
-        const name = document.createElement("span");
-        name.className = "task-name";
-        name.textContent = task.text;
+    const allTasks = [...pending, ...done];
+    const visibleTasks = expanded.tasks ? allTasks : allTasks.slice(0, 5);
 
-        const remove = document.createElement("button");
-        remove.type = "button";
-        remove.className = "delete-button";
-        remove.textContent = "Delete";
-        remove.onclick = () => deleteTask(task.id);
+    $("#empty").hidden = allTasks.length > 0;
+    visibleTasks.forEach(task => $("#list").append(makeTaskRow(task)));
 
-        item.append(check, name, remove);
-        $("#list").append(item);
-      });
+    $("#taskMore").hidden = allTasks.length <= 5;
+    $("#taskMore").textContent = expanded.tasks ? "See less" : "See more";
 
     renderWeeklySummary();
   }
 
-  form.onsubmit = event => {
-    event.preventDefault();
+  function addTask(openCalendarAfter) {
+    $("#deadline").setCustomValidity("");
 
-    const text = $("#task").value.trim();
+    if (!form.reportValidity()) return;
+
     const startAt = new Date($("#start").value);
     const deadlineAt = new Date($("#deadline").value);
 
@@ -241,13 +560,12 @@
       return;
     }
 
-    $("#deadline").setCustomValidity("");
-
     const task = {
       id: Date.now() + Math.random(),
-      text,
+      text: $("#task").value.trim(),
       startAt: startAt.toISOString(),
       deadlineAt: deadlineAt.toISOString(),
+      createdAt: new Date().toISOString(),
       completed: false,
       completedAt: null
     };
@@ -255,16 +573,37 @@
     tasks.push(task);
     save();
     render();
-    openGoogleCalendar(task);
+
+    if (openCalendarAfter) openGoogleCalendar(task);
+
     form.reset();
     setDefaultTimes();
+  }
+
+  form.onsubmit = event => {
+    event.preventDefault();
+    addTask(false);
   };
 
+  $("#addCalendar").onclick = () => addTask(true);
   $("#deadline").oninput = () => $("#deadline").setCustomValidity("");
+
+  $("#taskMore").onclick = () => {
+    expanded.tasks = !expanded.tasks;
+    render();
+  };
+
+  $("#weekMore").onclick = () => {
+    expanded.week = !expanded.week;
+    renderWeeklySummary();
+  };
 
   $("#clearDone").onclick = () => {
     const count = tasks.filter(task => task.completed).length;
-    if (!count || !confirm(`Delete all ${count} completed task(s) from this app?`)) return;
+
+    if (!count || !confirm(`Delete all ${count} completed task(s) from this app?`)) {
+      return;
+    }
 
     tasks = tasks.filter(task => !task.completed);
     save();
@@ -286,32 +625,37 @@
 
   $("#copyRecords").onclick = async () => {
     const data = exportRows()
-      .map(row => row.map(value => String(value).replace(/\t|\r?\n/g, " ")).join("\t"))
+      .map(row => row
+        .map(value => String(value).replace(/\t|\r?\n/g, " "))
+        .join("\t")
+      )
       .join("\n");
 
     try {
       await navigator.clipboard.writeText(data);
       alert("Records copied. Paste them into Google Sheets.");
     } catch {
-      alert("Copy failed. Use the Download CSV button instead.");
+      alert("Copy failed. Try using the Download CSV button.");
     }
   };
 
   $("#downloadCsv").onclick = () => {
     const csv = exportRows()
-      .map(row => row.map(value =>
-        `"${String(value).replace(/"/g, '""')}"`
-      ).join(","))
+      .map(row => row
+        .map(value => `"${String(value).replace(/"/g, '""')}"`)
+        .join(",")
+      )
       .join("\r\n");
 
-    const blob = new Blob(["\uFEFF", csv], {type:"text/csv;charset=utf-8"});
+    const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
     link.href = url;
     link.download = "todo-list-records.csv";
     link.click();
-    URL.revokeObjectURL(url);
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   setDefaultTimes();
